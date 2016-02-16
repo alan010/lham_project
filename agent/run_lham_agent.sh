@@ -1,7 +1,11 @@
 #! /bin/bash
 
-python_v=/usr/bin/python2.6
-ran_time=$(( RANDOM % 480 )).$(( RANDOM % 1000 )) 
+python_v=/usr/bin/python
+run_interval=10  #Can be read from config file in future version, in Minutes.
+
+
+ran_time_set=$(( run_interval * 4 / 5 * 60 ))  #Random seconds, always be 4/5 of $run_interval.
+ran_time=$(( RANDOM % ran_time_set )).$(( RANDOM % 1000 )) 
 
 sleep $ran_time
 
