@@ -1,0 +1,25 @@
+version: 0.5.1(fisrt record version)
+release time: 05/2015
+author: leihailong@wanda.cn
+
+functionality:
+	1. Add/delete user/host to ldap with default templates. Modify
+	user/host's attribute.
+	2. Add/delete user to a host, as normal user. (Add as sudoers is not
+	supported yet.)
+	3. Search a user/host my uid/host-ip. Search ou, Search a user's added
+	host.
+	4. Auto-generate  a key-pair for a user to login to a server, when
+	this user is first added.
+	5. Convert a tunnel public key with a key file provided by a user.
+	Store it into the right place with right privillege.
+
+
+version: 0.5.2
+release time: (not released. Still in developing.)
+author: leihailong@wanda.cn
+
+new functionality:
+	1. Can add/delete ou now.
+
+	

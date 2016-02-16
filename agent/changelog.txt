@@ -1,0 +1,106 @@
+
+version: 0.5.1(first record version)
+release time:  05/2015
+author: leihailong@wanda.cn
+
+functitonality:
+	1. Basic function with querying user list from lham server, creating localuser, getting appropriate key for new user, deleting user according to server and clearing deleted user's home directory.
+	2. divide client to three role: "client" for normal host, "jumper" for tunnel host, "directLogin" for special hosts which not go through the tunnel host.
+	3. check every user's key file(not check the content), if not exist, re-get from the lham server.
+	4. lham_agent with auto initiallize, when lham_agent workdir missing.
+	5. print operation log.
+
+special for this version:
+	1.Cancel function of user deleting in try-running conditoin.
+
+
+----------------------------------------------------------------------------
+
+version: 0.5.2
+release time: 2015-06-16 10:23:00
+author: leihailong@wanda.cn
+
+new functionality:
+	1. key_content_check 
+	Check contents of local key, if different from server side, replace the local one for private key, add new content as a new line into local key file for public key.
+	
+modified func: 
+	1. log
+	cancel '============start==========' log.
+
+
+----------------------------------------------------------------------------
+
+version: 0.5.3
+release time: (not finished.)
+author: leihailong@wanda.cn
+
+new functionality:
+	1. Auto update itself.
+	Check version from the server at the end of this running time, if new version released, update itself. So when running next time, new functionality will be active.
+	
+	2. Published in binary mode.
+	This require that crontab must use /usr/bin/python2.6 to launch lham_agent.
+
+	3. Change port from 12306, 12307 to 11306
+	Agent update use uri: http://10.77.135.60:11306/agent/pub/lham_agent
+
+	4. Add client version print with '-v' or '--version' args. 
+	
+	5. assign client role at runtime.
+	
+
+
+----------------------------------------------------------------------------
+
+version: 0.5.4
+release time: 2016-01-10
+author: leihailong@wanda.cn
+
+change:
+	1. Active delete user. But deleteHomeDir is still not activated.
+		While use still logged in, kill the referenced sshd process.
+
+	2. Rewrite timer()
+
+	3. Disable  'rm -f/rf ' action. Instead, user mv xxx to /tmp.
+
+	4.  Client update no longer check version automatically. Use  'python2.6
+	lham_agent --update' instead.
+
+
+----------------------------------------------------------------------------
+
+version:0.5.5
+release time: 2016-02-15
+author: leihailong@wanda.cn
+
+change:
+	1. add supportment to centos7. Now both centos6 and centos7 are supported.
+
+----------------------------------------------------------------------------
+
+version:next
+
+new change:
+	1. client_role 
+	Add client_role query, compare it with client input one. If not match, an error prompt and program stop running. 
+
+	2. delete_user 
+	Delete user by querying deleted_list in lham server. Not by comparing user list any more.
+
+	3. auto detect client's IP, not by provide by client any more.
+
+	4. Use hostname to identify hosts, in stead of primeIP.
+
+	5. Manager all sudoer configuration. Not include sudo to root.
+
+	6. Group hosts. Especially for JiaGouBu.
+
+	7. sudo_to_root 
+	Add sudo_to_root administration. sudoers are recorded in ldap host entry by attribute 'sudoToRoot', like attribute 'manager'.
+
+	8. client_authentication.
+	Client's requests require authentication.
+
+	9. delete_root_privilege

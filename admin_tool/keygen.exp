@@ -1,0 +1,13 @@
+#!/usr/bin/expect
+
+set timeout 10
+set userid [ lindex $argv 0 ]
+
+spawn /usr/bin/ssh-keygen -t rsa
+expect "Enter file in which to save the key*";
+send "/usr/local/ldapHostAccountManagement/pubkey/$userid/id_rsa_$userid\r";
+expect "Enter passphrase*";
+send "\r";
+expect "Enter same passphrase again*";
+send "\r";
+interact;
