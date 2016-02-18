@@ -2,7 +2,9 @@
 
 server_ip='10.209.11.12'   #This will be configure in config_file at later version.
 server_api_port='11306'    #This will be configure in config_file at later version.
-agent_role="client"        #This will be configure in config_file at later version.
+run_interval=10            #Minutes. This will be configure in config_file at later version.
+agent_role="client"        #This will be aborted when client_role can be stored in ldap.
+
 
 whoami=`/bin/hostname -f`
 
@@ -29,7 +31,7 @@ function get_agent_source() {
     if [ "$curl_result_1" == "AGENT_INSTALL_REQUEST_ACCEPTED" ]; then
         if [[  $curl_result_1 ~= '^http://.*$' ]]; then
             cd $WORK_DIR
-            wget -q "$curl_result_1"
+            wget -q "http://${server_ip}:${server_api_port}/$curl_result_1"
         else
             echo "===> ERROR: get agent resource failed."
             end_work
@@ -66,10 +68,18 @@ function install_agent() {
     /usr/bin/python lham_agent $agent_role
 }
 
+function download_run_script() {
+    cd $WORK_DIR
+    wget -q "http://${server_ip}:${server_api_port}/agent/pub/run_lham_agent.sh"
+    chmod 0700 run_lham_agent.sh
+    cp -af run_lham_agent.sh /usr/local/lham_agent/
+}
+
 #-------------- main -------------------
 
 pre_work
 get_agent_source
 compile_agent
 install_agent
+download_run_script
 end_work

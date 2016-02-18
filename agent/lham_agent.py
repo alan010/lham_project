@@ -12,7 +12,7 @@ URL_PREFIX_users = "http://%s:%s/query_host.php?myPrimeIP=" % (LHAM_HOST,LHAM_PO
 URL_PREFIX_pubkey = "http://%s:%s/request_pubkey.php?" % (LHAM_HOST,LHAM_PORT)
 URL_PREFIX_feedback = "http://%s:%s/get_feedback.php?" % (LHAM_HOST,LHAM_PORT)
 URL_PREFIX_versionCheck = "http://%s:%s/version_check.php?" % (LHAM_HOST,LHAM_PORT)
-RUN_INTERVAL = 5 #minutes interval running in crontab.
+RUN_INTERVAL = '10' #minutes interval running in crontab.
 QUERY_VALIDATION_FLAG="LHAM_BASE_USER_FOR_HOST_ACCOUNT_QUERY_VALIDATION"
 
 #------ local environment
@@ -22,6 +22,7 @@ DATAFILE = DATADIR + "/lham_agent.data"
 DELETED_RECORD = DATADIR + "/deleted_record.data"
 LOG = "/var/log/lham_agent.log"
 REMOVE_DIR="/tmp/lham_agent_for_file_rm"
+run_script="run_lham_agent.sh"
 
 import os, sys, time
 import platform, re
@@ -41,7 +42,7 @@ def loger(content, type="INFO"):
         print "%s [INFO] {%s}" % (timer('log'),content)
 
 def crontabCheck():
-    return os.system("cat /etc/crontab | grep '%s/%s' > /dev/null" % (WORKDIR,os.path.basename(sys.argv[0])))
+    return os.system("cat /etc/crontab | grep '%s' > /dev/null" % (run_script,)
 
 def safeRmFile(file_or_dir_path):
     if not os.path.isdir(REMOVE_DIR):
@@ -57,14 +58,7 @@ def initWork():
     os.system("mkdir -p %s" % (REMOVE_DIR,))
     os.system("chmod 0700 %s" % (DATADIR,))
     os.system("cp -f %s %s" % (sys.argv[0],WORKDIR)) 
-    loger('init: making workdir complete.')
-
-    #ret_code = crontabCheck()
-    #if ret_code == 256:
-    #    os.system("echo '*/%s * * * * root /usr/bin/python2.6 %s/%s %s >> %s 2>&1' >> /etc/crontab" % (RUN_INTERVAL,WORKDIR,os.path.basename(sys.argv[0]),MY_ROLE,LOG))
-    #    loger("init: adding crontab complete.")
-    #elif ret_code == 0:
-    #    loger("init: crontab for this program already exists.")
+    os.system("sed -i '/\/usr\/bin\/python.*%s/d' /etc/crontab && echo '*/%s * * * * root /bin/bash %s >> /etc/crontab'" % (run_script, RUN_INTERVAL, WORKDIR + '/' + run_script))
 
     ret_code = os.system("rpm -qa | grep ^curl- > /dev/null")
     if ret_code == 256:
@@ -389,7 +383,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     ### initializing
-    if not ( os.path.isdir(WORKDIR) and os.path.isdir(DATADIR) ):
+    if not ( os.path.isdir(WORKDIR) and os.path.isdir(DATADIR) and crontabCheck() == 0):
         initWork()
 
     ### working
