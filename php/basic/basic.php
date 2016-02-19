@@ -33,7 +33,7 @@ function validateHost($ip_input) {
 function validateHostByHostname($hostname_input) {
         $ldap_conn = ldap_connect(LDAP_HOST,LDAP_PORT);
         if(ldap_bind($ldap_conn,LDAP_BINDDN,LDAP_BINDPW)) {
-                if ($result_object = ldap_search($ldap_conn,HOST_BASE_DN,"(ipNetworkNumber=$hostname_input)",array('cn'))) {
+                if ($result_object = ldap_search($ldap_conn,HOST_BASE_DN,"(cn=$hostname_input)",array('cn'))) {
                         $info = ldap_get_entries($ldap_conn,$result_object);
                         if ($info['count'] !== 0 ) {
                                 //echo $info[0]['uid'][0] . "\n";

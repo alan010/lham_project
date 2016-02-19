@@ -72,26 +72,23 @@ change:
 ----------------------------------------------------------------------------
 
 version:0.5.5
-release time: 2016-02-15
-author: leihailong@wanda.cn
-
-change:
-	1. add supportment to centos7. Now both centos6 and centos7 are supported.
-
-----------------------------------------------------------------------------
-
-version:0.5.6
 release time: 2016-02-18
 author: alan001lhl@163.com
 
 change:
 	1. add agent install script, to compile lham_agent at install time on
-	every agent host. Add api for this script. 
-	2. rewrite lham_agent's init function to support crontab init with script:
+	every agent host. 
+	2. Add two apis for this script. One for lham_agent.py download, another for
+	clean download cache.
+	3. rewrite lham_agent's init function to support crontab init with script:
 	run_lham_agent.sh
+	4. No longer need function: clientUpdate(), which will be delete in next
+	version.
+	
 
 main feature:
-	Let lham_agent can run on different python environment.
+	Now lham_agent can run on different python environment. Also can be installed
+	or updated by using install_lham_agent.sh
 
 
 ----------------------------------------------------------------------------

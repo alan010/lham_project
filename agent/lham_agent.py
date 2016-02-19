@@ -42,7 +42,7 @@ def loger(content, type="INFO"):
         print "%s [INFO] {%s}" % (timer('log'),content)
 
 def crontabCheck():
-    return os.system("cat /etc/crontab | grep '%s' > /dev/null" % (run_script,)
+    return os.system("cat /etc/crontab | grep '%s' > /dev/null" % (run_script,))
 
 def safeRmFile(file_or_dir_path):
     if not os.path.isdir(REMOVE_DIR):
@@ -58,7 +58,7 @@ def initWork():
     os.system("mkdir -p %s" % (REMOVE_DIR,))
     os.system("chmod 0700 %s" % (DATADIR,))
     os.system("cp -f %s %s" % (sys.argv[0],WORKDIR)) 
-    os.system("sed -i '/\/usr\/bin\/python.*%s/d' /etc/crontab && echo '*/%s * * * * root /bin/bash %s >> /etc/crontab'" % (run_script, RUN_INTERVAL, WORKDIR + '/' + run_script))
+    os.system("sed -i '/%s/d' /etc/crontab && echo '*/%s * * * * root /bin/bash %s' >> /etc/crontab" % (run_script, RUN_INTERVAL, WORKDIR + '/' + run_script))
 
     ret_code = os.system("rpm -qa | grep ^curl- > /dev/null")
     if ret_code == 256:
@@ -89,7 +89,7 @@ def getOSVersion():
 def getPrimeIP():
     os_version = getOSVersion()
     if os_version == 'Centos6':
-        tmp_f = os.popen("ifconfig  |  awk -F'addr:' '/inet addr:10.*Bcast.*Mask/ {print $2}' | awk '{print $1}'")
+        tmp_f = os.popen("ifconfig  |  awk -F'addr:' '/inet addr:.*Bcast.*Mask/ {print $2}' | awk '{print $1}'")
     elif os_version == 'Centos7':
         tmp_f = os.popen("ifconfig | grep 'inet.*netmask.*broadcast' | awk -F'inet ' '{print $2}' | awk '{print $1}'")
     first_ip = tmp_f.readline().strip()
@@ -383,7 +383,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     ### initializing
-    if not ( os.path.isdir(WORKDIR) and os.path.isdir(DATADIR) and crontabCheck() == 0):
+    if not ( os.path.isdir(WORKDIR) and os.path.isdir(DATADIR) and os.path.isfile(WORKDIR + '/lham_agent')  and os.path.isfile(WORKDIR + '/run_lham_agent.sh') and crontabCheck() == 0):
         initWork()
 
     ### working

@@ -6,15 +6,16 @@ run_interval=10            #Minutes. This will be configure in config_file at la
 agent_role="client"        #This will be aborted when client_role can be stored in ldap.
 
 
-whoami=`/bin/hostname -f`
+whoami=`/bin/hostname`
 
 WORK_DIR=/tmp/tmp_for_install_lham_agent
 
 api_url="http://${server_ip}:${server_api_port}/for_agent_install.php"
+download_succ_report="http://${server_ip}:${server_api_port}/for_agent_install_clean_cache.php"
 passwd_phrase='THIS_IS_LHAM_AGENT_INSTALL_OR_UPDATE_SCRIPT-HELLO_GOD'
 
 function pre_work() {
-    mkdir $WORK_DIR
+    mkdir -p $WORK_DIR
 }
 
 function end_work() {
@@ -24,16 +25,17 @@ function end_work() {
 }
 
 function get_agent_source() {
-    curl_result=`curl "${api_url}?whoami=${whoami}&passwd_phrase=${passwd_phrase}"`
+    curl_result=`curl -s -m 3 "${api_url}?whoami=${whoami}&passwd_phrase=${passwd_phrase}"`
     curl_result_1=`echo $curl_result | awk '{print $1}'`
     curl_result_2=`echo $curl_result | awk '{print $2}'`
 
     if [ "$curl_result_1" == "AGENT_INSTALL_REQUEST_ACCEPTED" ]; then
-        if [[  $curl_result_1 ~= '^http://.*$' ]]; then
-            cd $WORK_DIR
-            wget -q "http://${server_ip}:${server_api_port}/$curl_result_1"
+        cd $WORK_DIR
+        wget -q "http://${server_ip}:${server_api_port}/$curl_result_2"
+        if [ -f ./lham_agent.py ]; then
+            curl -s -m 3 "${download_succ_report}?whoami=${whoami}&cache_path=$curl_result_2"
         else
-            echo "===> ERROR: get agent resource failed."
+            echo "===> ERROR: agent resource download error."
             end_work
         fi
     else
@@ -43,14 +45,8 @@ function get_agent_source() {
 }
 
 function compile_agent() {
-    mkdir $WORK_DIR
     cd $WORK_DIR
-    if [ -f ./lham_agent.py ]; then
-        /usr/bin/python -m py_compile lham_agent.py
-    else
-        echo "===> ERROR: agent resource download error."
-        end_work
-    fi
+    /usr/bin/python -m py_compile lham_agent.py
 
     if [ -f ./lham_agent.pyc ]; then
         mv lham_agent.pyc lham_agent
