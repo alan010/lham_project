@@ -313,46 +313,46 @@ def localPubkeyCheck():
                         writeKey(user,tunnel_key_ret[0],tunnel_key_ret[1])
                         loger("getPubKey: tunnel_key for user '%s' updated successfully." % (user,) )
 
-def clientUpdate(prime_ip):
-    """
-    Try to update myself if newer version released at the lham server.
-    """
-    tmp_f = os.popen("curl -s -m 5 '%s%s'" % (URL_PREFIX_versionCheck,"myPrimeIP=%s" % (prime_ip,)))
-    return_list = fileObjectToList(tmp_f)
-    return_list_len = len(return_list)
-    if return_list_len == 0:
-        loger('clientUpdate: server no response.',"ERROR")
-        sys.exit(1)
-    elif return_list_len != 2 or return_list[0] != "VERSION_CHECK_SUCCESS":
-        loger('clientUpdate: version_check failed!',"ERROR")
-        sys.exit(1)
-    else:
-        current_release_version_string = return_list[1]
-        current_release_version_string_ls = current_release_version_string.split('-')
-        if len(current_release_version_string_ls) != 2 or current_release_version_string_ls[0] != "lham_agent":
-            loger("clientUpdate: version_string return from server looks illegal: " + current_release_version_string,"ERROR")
-            sys.exit(1)
-        else:
-            current_release_version=current_release_version_string_ls[1]
-
-    my_version_int=int(''.join(MY_VERSION.split('.')))
-    current_release_version_int=int(''.join(current_release_version.split('.')))
-    if my_version_int < current_release_version_int:
-        os.system("wget -w 10 -O %s --quiet http://%s:%s/agent/pub/lham_agent" % (WORKDIR + '/' + current_release_version, LHAM_HOST, LHAM_PORT) )
-        if os.path.isfile(WORKDIR + '/' + current_release_version):
-            data = open(WORKDIR + '/' + current_release_version).read()
-            if len(data) == 0:
-                loger('clientUpdate: update failed, no data got from lham server.','ERROR')
-                sys.exit(1)
-
-            safeRmFile=(WORKDIR + "/lham_agent")
-            return_code = os.system("mv %s %s && chmod 0600 %s" % ( WORKDIR + '/' + current_release_version,
-                                          WORKDIR + "/lham_agent",
-                                          WORKDIR + "/lham_agent"))
-            if return_code == 0:
-                loger('clientUpdate: Successfully updated to version: ' +  current_release_version_int) 
-            else:
-                loger('clientUpdate: update failed.',"ERROR")
+#def clientUpdate(prime_ip):
+#    """
+#    Try to update myself if newer version released at the lham server.
+#    """
+#    tmp_f = os.popen("curl -s -m 5 '%s%s'" % (URL_PREFIX_versionCheck,"myPrimeIP=%s" % (prime_ip,)))
+#    return_list = fileObjectToList(tmp_f)
+#    return_list_len = len(return_list)
+#    if return_list_len == 0:
+#        loger('clientUpdate: server no response.',"ERROR")
+#        sys.exit(1)
+#    elif return_list_len != 2 or return_list[0] != "VERSION_CHECK_SUCCESS":
+#        loger('clientUpdate: version_check failed!',"ERROR")
+#        sys.exit(1)
+#    else:
+#        current_release_version_string = return_list[1]
+#        current_release_version_string_ls = current_release_version_string.split('-')
+#        if len(current_release_version_string_ls) != 2 or current_release_version_string_ls[0] != "lham_agent":
+#            loger("clientUpdate: version_string return from server looks illegal: " + current_release_version_string,"ERROR")
+#            sys.exit(1)
+#        else:
+#            current_release_version=current_release_version_string_ls[1]
+#
+#    my_version_int=int(''.join(MY_VERSION.split('.')))
+#    current_release_version_int=int(''.join(current_release_version.split('.')))
+#    if my_version_int < current_release_version_int:
+#        os.system("wget -w 10 -O %s --quiet http://%s:%s/agent/pub/lham_agent" % (WORKDIR + '/' + current_release_version, LHAM_HOST, LHAM_PORT) )
+#        if os.path.isfile(WORKDIR + '/' + current_release_version):
+#            data = open(WORKDIR + '/' + current_release_version).read()
+#            if len(data) == 0:
+#                loger('clientUpdate: update failed, no data got from lham server.','ERROR')
+#                sys.exit(1)
+#
+#            safeRmFile=(WORKDIR + "/lham_agent")
+#            return_code = os.system("mv %s %s && chmod 0600 %s" % ( WORKDIR + '/' + current_release_version,
+#                                          WORKDIR + "/lham_agent",
+#                                          WORKDIR + "/lham_agent"))
+#            if return_code == 0:
+#                loger('clientUpdate: Successfully updated to version: ' +  current_release_version_int) 
+#            else:
+#                loger('clientUpdate: update failed.',"ERROR")
                 
 
                     
@@ -373,9 +373,9 @@ if __name__ == "__main__":
     elif sys.argv[1] in ['-v', '--version']:
         print MY_VERSION
         sys.exit(0)
-    elif sys.argv[1] == "--update":
-        clientUpdate(my_prime_ip)
-        sys.exit(0)
+    #elif sys.argv[1] == "--update":
+    #    clientUpdate(my_prime_ip)
+    #    sys.exit(0)
 
     MY_ROLE = sys.argv[1]
     if not MY_ROLE in ['client', 'jumper', 'directLogin']:
