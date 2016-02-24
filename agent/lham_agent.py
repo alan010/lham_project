@@ -44,6 +44,8 @@ def crontabCheck():
     return os.system("cat /etc/crontab | grep '%s' > /dev/null" % (run_script,))
 
 def initWork():
+    if os.path.isfile(WORKDIR):
+        os.remove(WORKDIR)
     os.system("mkdir -p %s" % (DATADIR,))
     os.system("chmod 0700 %s" % (DATADIR,))
     os.system("cp -f %s %s" % (sys.argv[0],WORKDIR)) 
