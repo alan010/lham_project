@@ -21,5 +21,8 @@ author: leihailong@wanda.cn
 
 new functionality:
 	1. Can add/delete ou now.
+	2. deleteHostUser will prompt confirming message, because of lham_agent
+	use dangerous  cmd 'userdel -f'
+
 
 	
