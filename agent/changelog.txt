@@ -82,8 +82,11 @@ change:
 	clean download cache.
 	3. rewrite lham_agent's init function to support crontab init with script:
 	run_lham_agent.sh
-	4. No longer need function: clientUpdate(), which will be delete in next
-	version.
+	4. No longer need function: clientUpdate() 
+	5. userdel use cmd: 'userdel -f'. This will delete all things about this user,
+	even if this user is stile login.
+
+	
 	
 
 main feature:

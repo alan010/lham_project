@@ -146,22 +146,13 @@ def addNewUser(user_list):
 def deleteUser(user_list):
     deleted_record_f = open(DELETED_RECORD,'a')
     for user in user_list:
-        ret_code = os.system("userdel  %s" % (user,))
+        ret_code = os.system("userdel -f %s" % (user,))
         if ret_code == 0:
             deleted_record_f.write("%s\n" % (user,))
             loger("delete user: '%s'" % (user,))
             #loger("delete user: homedir '/home/%s' will be deleted at 02:00 am next day." % (user,))
-        elif ret_code == 1536 and os.path.isdir('/home/%s' % (user,)):
-            deleted_record_f.write("%s\n" % (user,))
-            loger("delete user: '%s' user not exist, but its'homedir does. This homedir will be deleted at 02:00 am next day." % (user,))
-        elif ret_code == 2048:
-            deleted_record_f.write("%s\n" % (user,))
-            os.system("ps aux | grep sshd | grep -v '/usr/sbin/sshd' | egrep '%s(@| )' | awk '{print \"kill -9 \" $2}' | sh" % (user,))
-            ret_code = os.system("userdel  %s" % (user,))
-            if ret_code == 0:
-                loger("delete user: '%s'" % (user,))
-            else:
-                loger("delete user: '%s' failed with error number: %d" % (user,ret_code), 'ERROR')
+        else:
+            loger("delete user: '%s' failed with error number: %d" % (user,ret_code), 'ERROR')
     deleted_record_f.close()
     os.system('chmod 0600 %s' % (DELETED_RECORD,))
 
