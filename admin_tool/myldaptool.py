@@ -376,8 +376,8 @@ if __name__ == '__main__':
             sys.exit(1)
         to_delete_user=sys.argv[2]
         target_host=sys.argv[3]
-        print "===> Warning: All things about user '%s' will delete on target host '%s'." % (to_delete_user, target_host)
-        answer=raw_input("Do really want to delete '%s' on host '%s'? [y/n]" % (to_delete_user, target_host))
+        print "==> Warning: All things about user will delete on target host."
+        answer=raw_input("==> Do really want to delete '%s' on host '%s'? [y/n]" % (to_delete_user, target_host))
         if answer == 'y' or answer == 'Y':
             if len(sys.argv) == 5 and sys.argv[4] == "sudoer":
                 #deleteHostUser(sys.argv[2], sys.argv[3],True)
@@ -385,7 +385,7 @@ if __name__ == '__main__':
             else:
                 modifyHostUser(sys.argv[2], sys.argv[3],"delete")
         else:
-            print "===> OK. deleteHostUser abort."
+            print "==> OK. deleteHostUser abort."
             sys.exit(0)
     elif sys.argv[1] == "addTunnelKey":
         addUserPubkeyToTunnel(sys.argv[2],sys.argv[3])
