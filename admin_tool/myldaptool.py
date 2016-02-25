@@ -141,7 +141,7 @@ def getNextUidnumber():
         return int(return_str) + 1
 
 def myRegMatch(reg_str, target_str):
-    reg_obj = re.compile("^ [^ ].*$")
+    reg_obj = re.compile(reg_str)
     if reg_obj.search(target_str) != None:
         return 1
     else:
@@ -219,15 +219,18 @@ def myldapadd(role_type,id):
     os.system("ldapadd -x -h %s -p %s -w %s -D '%s' -f %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, tmp_f_path))
     os.system("rm -f " + tmp_f_path)
 
-def myldapdelete(role_type,id):
+def myldapdelete(role_type,id, to_prompt='yes'):
     tmp_list = myldapsearch(role_type, id)
     if tmp_list != []:
         this_dn = tmp_list[0].split(':')[1].strip()
-        print this_dn
-        if raw_input('Do you really want to delete this entry? [y/n] ') in 'yY':
-            os.system("ldapdelete -x -h %s -p %s -w %s -D '%s' %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, this_dn))
+        if to_prompt == 'yes':
+            print this_dn
+            if raw_input('Do you really want to delete this entry? [y/n] ') in 'yY':
+                os.system("ldapdelete -x -h %s -p %s -w %s -D '%s' %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, this_dn))
+            else:
+                print "OK, no change!"
         else:
-            print "OK, no change!"
+            os.system("ldapdelete -x -h %s -p %s -w %s -D '%s' %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, this_dn))
     else:
         print "no entry found with this: %s" % (id,)
 
@@ -326,7 +329,7 @@ def addUserPubkeyToTunnel(user_id, key_path):
         print "\nERROR: Invalid input file."
         sys.exit(1)
 
-def searchHostUser(user_id):
+def searchHostUser(user_id, to_print='yes'):
     user_dn = myldapsearch("user",user_id,"dn",True)
     if user_dn == []:
         print "\nERROR: user invalid."
@@ -336,7 +339,26 @@ def searchHostUser(user_id):
         print "\nERROR: more than one user entry found."
         sys.exit(1)
     user_dn_abs=user_dn[0].split(':')[1].strip()
-    os.system("ldapsearch -LLL -x -h %s -p %s -w %s -D '%s' -b %s '(%s=%s)' %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, HOST_BASEDN, "manager", user_dn_abs, "ipNetworkNumber"))
+    f_popen=os.popen("ldapsearch -LLL -x -h %s -p %s -w %s -D '%s' -b %s '(%s=%s)' %s %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, HOST_BASEDN, "manager", user_dn_abs,  "cn", "ipNetworkNumber"))
+    f_popen_list=f_popen.readlines()
+    if to_print=='yes':
+        for line in f_popen_list:
+            print line.rstrip()
+
+    return f_popen_list
+
+def relatedDeleteHostUser(user_id):
+    related_hosts=searchHostUser(user_id, 'no')
+    hosts_counter=0
+    for line in related_hosts:
+        if myRegMatch('^ipNetworkNumber: ', line):
+            hosts_counter += 1
+            modifyHostUser(user_id, line.split()[1].rstrip(), "delete")
+    myldapdelete(sys.argv[2], sys.argv[3], 'no')
+    print "===> %d hosts related has removed user: %s." % (hosts_counter, user_id)
+            
+        
+    
     
         
 
@@ -357,7 +379,16 @@ if __name__ == '__main__':
     elif sys.argv[1] == "add":
         myldapadd(sys.argv[2], sys.argv[3])
     elif sys.argv[1] == "delete":
-        myldapdelete(sys.argv[2], sys.argv[3]) 
+        if sys.argv[2] == 'user':
+            print "===> Warning: all things about this user will be deleted from all related hosts."
+            user_delete_confirm=raw_input("===> Do you want to continue? [y/n]")
+            if user_delete_confirm in 'yY':
+                relatedDeleteHostUser(sys.argv[3])
+            else:
+                print "===> OK, deleting user abort."
+        else:
+            myldapdelete(sys.argv[2], sys.argv[3]) 
+            
     elif sys.argv[1] == "modify":
         if arg_len != 6:
             print "\nERROR: wrong usage with modify operation."
@@ -371,7 +402,7 @@ if __name__ == '__main__':
             modifyHostUser(sys.argv[2], sys.argv[3],"add")
         
     elif sys.argv[1] == "deleteHostUser":
-	if arg_len < 4:
+        if arg_len < 4:
             usage()
             sys.exit(1)
         to_delete_user=sys.argv[2]
