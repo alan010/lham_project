@@ -32,5 +32,11 @@ release time:
 change:
 	1. user related delete: 
 		When delete a user, delete this user on all related hosts simultaneously.
+	2. can update hostname now:
+		to delete old host entry, readd it with new one, this is because we
+		use hsotname in host entry's 'dn'.
+	3. can update ip now:
+	    Use ldapmodify directly, no need to delete host entry for this change.
+	4.  Optimize search output with no breaking line.
 
 	

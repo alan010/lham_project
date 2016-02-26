@@ -152,21 +152,21 @@ def myldapsearch(role_type, id, attr='',no_print=False):
     if id == '@all':
         id = "*"
     tmp_f = os.popen("ldapsearch -LLL -x -h %s -p %s -w %s -D '%s' -b %s '(%s=%s)' %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, role[0], role[1], id, attr))
-    tmp_f_list = []
-    while True:
-        line = tmp_f.readline()
-        if line == '':
-            break
-        if no_print == False:
-            print line.rstrip()
-        tmp_f_list.append(line.rstrip())
 
+    tmp_f_list = tmp_f.readlines()
     tmp_f_list_return = []
+
+    ### when one attribute's value for some entry is too long, 'ldapsearch' tool return this attribute in multiple lines.
+    ### Now to merge this attribute in one single line.
     for i in tmp_f_list:
-        if myRegMatch("^ [^ ].*$", i) == 1:
+        if myRegMatch("^ [^ ].*$", i.rstrip()) == 1:
             tmp_f_list_return[-1] += i.strip()
         else:
-            tmp_f_list_return.append(i)
+            tmp_f_list_return.append(i.rstrip())
+
+    if no_print == False:
+        for line in tmp_f_list_return:
+            print line
     return tmp_f_list_return
 
 def writeTmpLdif(file_list):
@@ -220,21 +220,30 @@ def myldapadd(role_type,id):
     os.system("rm -f " + tmp_f_path)
 
 def myldapdelete(role_type,id, to_prompt='yes'):
-    tmp_list = myldapsearch(role_type, id)
+    tmp_list = myldapsearch(role_type, id, no_print=True)
     if tmp_list != []:
         this_dn = tmp_list[0].split(':')[1].strip()
         if to_prompt == 'yes':
-            print this_dn
-            if raw_input('Do you really want to delete this entry? [y/n] ') in 'yY':
+            if raw_input('Do you really want to delete entry "%s"? [y/n] ' % (this_dn,)) in 'yY':
+                print '\ndeleting entry "%s"\n' % (this_dn,)
                 os.system("ldapdelete -x -h %s -p %s -w %s -D '%s' %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, this_dn))
             else:
                 print "OK, no change!"
         else:
+            print '\ndeleting entry "%s"\n' % (this_dn,)
             os.system("ldapdelete -x -h %s -p %s -w %s -D '%s' %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, this_dn))
     else:
         print "no entry found with this: %s" % (id,)
 
 def myldapmodify(role_type,id,modify_type,modify_attr):
+    '''
+    role_type: 'host' or 'user'.
+    id: '<host_prime_ip>' for 'host', '<user_id>' for 'user'.
+    modify_type: 'replace', 'add', or 'delete'
+    modify_attr: in ldap attribute format, like this: 
+        'ipNetworkNumber: 192.168.1.100'
+    
+    '''
     attr_list = modify_attr.split(':')
     attr_name = attr_list[0].strip()
     if len(attr_list) >=2:
@@ -356,10 +365,55 @@ def relatedDeleteHostUser(user_id):
             modifyHostUser(user_id, line.split()[1].rstrip(), "delete")
     myldapdelete(sys.argv[2], sys.argv[3], 'no')
     print "===> %d hosts related has removed user: %s." % (hosts_counter, user_id)
+
+def updateHostname(host_prime_ip, new_hostname):
+    old_host_entry = myldapsearch('host', host_prime_ip, no_print=True)
+    new_host_entry = []
+    dn_counter = 0
+    cn_counter = 0
+    old_hostname = ''
+    cn_list = []
+    for line in old_host_entry:
+        if myRegMatch('^dn: ', line):
+            dn_counter += 1
+            old_hostname = line.split()[1].split('=')[1].split(',')[0] 
+            new_dn = line.replace('cn=' + old_hostname, 'cn=' + new_hostname)
+            new_host_entry.append(new_dn)
+        elif myRegMatch('^cn: ', line):
+            if old_hostname == '':
+                for line in old_host_entry:
+                    print line
+                print '\n==> ERROR: Wrong host entry.'
+                sys.exit(1)
+            else:
+                cn_list.append(line)
+                new_cn = line.replace(old_hostname, new_hostname)
+                new_host_entry.append(new_cn)
+        else:
+            new_host_entry.append(line)
             
-        
-    
-    
+    if dn_counter > 1:
+        for line in old_host_entry:
+            print line
+        print "==> ERROR: host not uniq by your inputed host_ip: " + host_prime_ip
+        sys.exit(1)
+    elif dn_counter == 0:
+        print "==> ERROR: host not found by your inputed host_ip: " + host_prime_ip
+        sys.exit(1)
+    else:
+        myldapdelete('host', host_prime_ip, 'no') 
+        tmp_f_path = writeTmpLdif(new_host_entry)
+        os.system("ldapadd -x -h %s -p %s -w %s -D '%s' -f %s" % (LDAPHOST, LDAPPORT, LDAP_BINDPW, LDAP_BINDDN, tmp_f_path))
+        os.system("rm -f " + tmp_f_path)
+        if cn_counter > 1:
+            print "==> Warning: host cn not unique: "
+            print new_dn
+            for cn_index in cn_list:
+                print cn_index
+
+def updateHostip(host_prime_ip,new_ip):
+    new_ip_attribute = 'ipNetworkNumber: '+new_ip
+    myldapmodify('host', host_prime_ip, 'replace', new_ip_attribute)
         
 
 #=================== main ====================
@@ -420,6 +474,16 @@ if __name__ == '__main__':
             sys.exit(0)
     elif sys.argv[1] == "addTunnelKey":
         addUserPubkeyToTunnel(sys.argv[2],sys.argv[3])
+    elif sys.argv[1] == "updateHostname": 
+        if arg_len < 4: 
+            usage() 
+            sys.exit(1)  
+        updateHostname(sys.argv[2],sys.argv[3]) 
+    elif sys.argv[1] == "updateHostip":
+        if arg_len < 4:
+            usage()
+            sys.exit(1)
+        updateHostip(sys.argv[2],sys.argv[3])
     else:
         usage()
         
