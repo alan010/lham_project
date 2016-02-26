@@ -95,18 +95,23 @@ main feature:
 
 
 ----------------------------------------------------------------------------
-version:next
+version:0.5.6
+release time: 2016-02-26
+author: alan001lhl@163.com
 
+change:
+	1. Instead of using ip, use hostname to identify hosts.
+	2. API: Delete version_check.php, no longer need it.
+
+
+
+----------------------------------------------------------------------------
+version:  in future
 new change:
 	1. client_role 
 	Add client_role query, compare it with client input one. If not match, an error prompt and program stop running. 
 
-	2. delete_user 
-	Delete user by querying deleted_list in lham server. Not by comparing user list any more.
-
 	3. auto detect client's IP, not by provide by client any more.
-
-	4. Use hostname to identify hosts, in stead of primeIP.
 
 	5. Manager all sudoer configuration. Not include sudo to root.
 

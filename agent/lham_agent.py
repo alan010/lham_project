@@ -2,13 +2,14 @@
 
 #------ LDAP-host-account-management client info
 MY_ROLE = "client" #can be: 'client','jumper','directLogin'
-MY_VERSION = "0.5.5"
+MY_VERSION = "0.5.6"
 
 #LHAM_HOST = "lham.dianshang.wanda.cn"
 LHAM_HOST = "10.209.11.12"
 LHAM_PORT = "11306"
 #LHAM_PORT_FOR_CLIENT_UPDATE = "11307"
-URL_PREFIX_users = "http://%s:%s/query_host.php?myPrimeIP=" % (LHAM_HOST,LHAM_PORT)
+#URL_PREFIX_users = "http://%s:%s/query_host.php?myPrimeIP=" % (LHAM_HOST,LHAM_PORT) ###aborted at 2016-02-26
+URL_PREFIX_users = "http://%s:%s/query_host.php?whoami=" % (LHAM_HOST,LHAM_PORT) ### Instead of host ip, use hostname to identify hosts.
 URL_PREFIX_pubkey = "http://%s:%s/request_pubkey.php?" % (LHAM_HOST,LHAM_PORT)
 URL_PREFIX_feedback = "http://%s:%s/get_feedback.php?" % (LHAM_HOST,LHAM_PORT)
 URL_PREFIX_versionCheck = "http://%s:%s/version_check.php?" % (LHAM_HOST,LHAM_PORT)
@@ -75,7 +76,6 @@ def getOSVersion():
     else:
         loger('getOSVersion: Not supported OS: ' + platform.linux_distribution()[0] + '. Only Centos6/7 supported.', 'ERROR')
         sys.exit(1)
-    
 
 def getPrimeIP():
     os_version = getOSVersion()
@@ -97,6 +97,14 @@ def fileObjectToList(fileObj):
         
     return file_list
     
+def getHostname():
+    myhname_f=os.popen('hostname')
+    myhname_f_list=fileObjectToList(myhname_f)
+    if myhname_f_list == []:
+        loger('getHostname: Cannot get my hostname.' 'ERROR')
+        sys.exit(1)
+    myhname=myhname_f_list[0]
+    return myhname
     
 def getChange(myIP):
     tmp_f = os.popen("curl -s '%s%s'" % (URL_PREFIX_users,myIP))
@@ -283,10 +291,11 @@ def localPubkeyCheck():
 
 if __name__ == "__main__":
     start_time = timer('log')
-    my_prime_ip = getPrimeIP()
-    if my_prime_ip == '':
-        loger("no ip available!","ERROR")
-        sys.exit(1)
+    #my_prime_ip = getPrimeIP()
+    #if my_prime_ip == '':
+    #    loger("no ip available!","ERROR")
+    #    sys.exit(1)
+    my_hostname = getHostname()
 
     ### Determine role type.
     if len(sys.argv) != 2:
@@ -306,7 +315,7 @@ if __name__ == "__main__":
         initWork()
 
     ### working
-    changing = getChange(my_prime_ip)
+    changing = getChange(my_hostname)
     addNewUser(changing["add"])
     deleteUser(changing["delete"])
     replaceDataFile(changing)

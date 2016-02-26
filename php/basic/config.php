@@ -10,7 +10,7 @@ define("USER_BASE_DN" , "ou=users," . LDAP_BASE_DN);
 define("HOST_BASE_DN" , "ou=machines," . LDAP_BASE_DN);
 
 #------ local environment -------
-define("WORK_DIR", "/usr/local/lham_server");
+define("WORK_DIR", "/usr/local/ldapHostAccountManagement");
 define("KEY_GEN_DIR",WORK_DIR . "/pubkey");
 
 ?>
